@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSwap AI - Free Unlimited Face Swap</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#FFD700',
+                        secondary: '#FFA500',
+                        dark: '#0a0a0a',
+                        darker: '#050505',
+                        surface: '#1a1a1a',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'shimmer': 'shimmer 2s linear infinite',
+                        'gradient-x': 'gradient-x 15s ease infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        shimmer: {
+                            '0%': { backgroundPosition: '-200% 0' },
+                            '100%': { backgroundPosition: '200% 0' },
+                        },
+                        'gradient-x': {
+                            '0%, 100%': { 'background-position': '0% 50%' },
+                            '50%': { 'background-position': '100% 50%' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050505;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        .glass-panel {
+            background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 200% auto;
+            animation: gradient-x 3s ease infinite;
+        }
+        
+        .glow {
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        
+        .upload-zone {
+            border: 2px dashed rgba(255, 215, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .upload-zone:hover {
+            border-color: #FFD700;
+            background: rgba(255, 215, 0, 0.05);
+            transform: translateY(-2px);
+        }
+        
+        .upload-zone.dragover {
+            border-color: #FFD700;
+            background: rgba(255, 215, 0, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2s linear infinite;
+        }
+        
+        .tab-active {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            font-weight: 600;
+        }
+        
+        .feature-card {
+            background: linear-gradient(145deg, rgba(26,26,26,0.8) 0%, rgba(10,10,10,0.8) 100%);
+            border: 1px solid rgba(255,215,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255,215,0,0.3);
+            box-shadow: 0 10px 40px rgba(255,215,0,0.1);
+        }
+        
+        .video-preview {
+            background: linear-gradient(45deg, #1a1a1a 25%, transparent 25%, transparent 75%, #1a1a1a 75%, #1a1a1a),
+                        linear-gradient(45deg, #1a1a1a 25%, transparent 25%, transparent 75%, #1a1a1a 75%, #1a1a1a);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255,215,0,0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .step-number {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #FFD700;
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 10s infinite;
+        }
+        
+        @media (max-width: 768px) {
+            .gradient-text {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Background Effects -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
+        <div class="particle" style="top: 20%; left: 10%; animation-delay: 0s;"></div>
+        <div class="particle" style="top: 60%; left: 80%; animation-delay: 2s;"></div>
+        <div class="particle" style="top: 40%; left: 60%; animation-delay: 4s;"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 glass-panel border-b border-yellow-500/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-bolt text-black text-sm"></i>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight">DeepSwap<span class="text-yellow-400">AI</span></span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#features" class="text-gray-300 hover:text-yellow-400 transition-colors text-sm font-medium">Features</a>
+                    <a href="#how-it-works" class="text-gray-300 hover:text-yellow-400 transition-colors text-sm font-medium">How it Works</a>
+                    <a href="#pricing" class="text-gray-300 hover:text-yellow-400 transition-colors text-sm font-medium">Pricing</a>
+                    <button class="btn-primary px-6 py-2 rounded-full text-sm">Get Started</button>
+                </div>
+                <button class="md:hidden text-white" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="fixed inset-0 z-40 bg-black/95 transform translate-x-full transition-transform duration-300 md:hidden">
+        <div class="flex flex-col items-center justify-center h-full space-y-8">
+            <a href="#features" class="text-2xl font-semibold text-white hover:text-yellow-400" onclick="toggleMobileMenu()">Features</a>
+            <a href="#how-it-works" class="text-2xl font-semibold text-white hover:text-yellow-400" onclick="toggleMobileMenu()">How it Works</a>
+            <a href="#pricing" class="text-2xl font-semibold text-white hover:text-yellow-400" onclick="toggleMobileMenu()">Pricing</a>
+            <button class="btn-primary px-8 py-3 rounded-full text-lg">Get Started</button>
+        </div>
+        <button class="absolute top-6 right-6 text-white" onclick="toggleMobileMenu()">
+            <i class="fas fa-times text-2xl"></i>
+        </button>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 z-10">
+        <div class="max-w-5xl mx-auto text-center">
+            <div class="inline-flex items-center px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 mb-8 animate-pulse-slow">
+                <span class="w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse"></span>
+                <span class="text-yellow-400 text-sm font-medium">Now supporting up to 5 minutes video duration</span>
+            </div>
+            
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+                <span class="gradient-text">100% Free AI</span><br>
+                <span class="text-white">Face Swap Online</span>
+            </h1>
+            
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed">
+                Professional-grade face swapping for photos, GIFs, and long-form videos up to <span class="text-yellow-400 font-semibold">5 minutes</span>. No sign-up required, no watermarks.
+            </p>
+
+            <!-- Main App Interface -->
+            <div class="glass-panel rounded-3xl p-6 md:p-8 max-w-4xl mx-auto shadow-2xl border border-yellow-500/20">
+                
+                <!-- Tabs -->
+                <div class="flex justify-center mb-8 space-x-2 bg-black/30 p-1 rounded-full inline-flex mx-auto">
+                    <button onclick="switchTab('photo')" id="tab-photo" class="tab-active px-6 py-2 rounded-full text-sm transition-all duration-300">
+                        <i class="fas fa-image mr-2"></i>Photo Swap
+                    </button>
+                    <button onclick="switchTab('video')" id="tab-video" class="px-6 py-2 rounded-full text-sm text-gray-400 hover:text-white transition-all duration-300">
+                        <i class="fas fa-video mr-2"></i>Video Swap
+                    </button>
+                    <button onclick="switchTab('multiple')" id="tab-multiple" class="px-6 py-2 rounded-full text-sm text-gray-400 hover:text-white transition-all duration-300">
+                        <i class="fas fa-users mr-2"></i>Multiple Faces
+                    </button>
+                </div>
+
+                <!-- Photo Swap Interface -->
+                <div id="interface-photo" class="space-y-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Source Upload -->
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <div class="step-number">1</div>
+                                <span class="text-sm font-medium text-gray-300">Upload source image</span>
+                            </div>
+                            <div class="upload-zone rounded-2xl p-8 text-center cursor-pointer relative overflow-hidden group" onclick="document.getElementById('source-photo').click()" ondrop="handleDrop(event, 'photo-source')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                                <input type="file" id="source-photo" class="hidden" accept="image/*" onchange="handleFileSelect(event, 'photo-source')">
+                                <div id="preview-photo-source" class="hidden absolute inset-0 bg-cover bg-center"></div>
+                                <div class="relative z-10">
+                                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <i class="fas fa-cloud-upload-alt text-2xl text-yellow-400"></i>
+                                    </div>
+                                    <p class="text-sm text-gray-400 mb-1">Click to upload or drag and drop</p>
+                                    <p class="text-xs text-gray-600">JPG, PNG, WEBP ≤ 50 MB</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Target Upload -->
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <div class="step-number">2</div>
+                                <span class="text-sm font-medium text-gray-300">Upload target face</span>
+                            </div>
+                            <div class="upload-zone rounded-2xl p-8 text-center cursor-pointer relative overflow-hidden group" onclick="document.getElementById('target-photo').click()" ondrop="handleDrop(event, 'photo-target')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                                <input type="file" id="target-photo" class="hidden" accept="image/*" onchange="handleFileSelect(event, 'photo-target')">
+                                <div id="preview-photo-target" class="hidden absolute inset-0 bg-cover bg-center"></div>
+                                <div class="relative z-10">
+                                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <i class="fas fa-user-circle text-2xl text-yellow-400"></i>
+                                    </div>
+                                    <p class="text-sm text-gray-400 mb-1">Click to upload face image</p>
+                                    <p class="text-xs text-gray-600">Clear frontal face preferred</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Button -->
+                    <div class="flex items-center justify-between pt-4 border-t border-white/10">
+                        <div class="text-xs text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Processing time: ~3-5 seconds
+                        </div>
+                        <button onclick="startProcessing('photo')" class="btn-primary px-8 py-3 rounded-full flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed" id="btn-photo">
+                            <span>Start Face Swapping</span>
+                            <i class="fas fa-magic"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Video Swap Interface -->
+                <div id="interface-video" class="space-y-6 hidden">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Video Upload -->
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <div class="step-number">1</div>
+                                <span class="text-sm font-medium text-gray-300">Upload source video</span>
+                            </div>
+                            <div class="upload-zone rounded-2xl p-8 text-center cursor-pointer relative overflow-hidden group" onclick="document.getElementById('source-video').click()" ondrop="handleDrop(event, 'video-source')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                                <input type="file" id="source-video" class="hidden" accept="video/*" onchange="handleFileSelect(event, 'video-source')">
+                                <div id="preview-video-source" class="hidden absolute inset-0 bg-black flex items-center justify-center">
+                                    <video id="video-preview-el" class="max-h-full max-w-full" controls></video>
+                                </div>
+                                <div class="relative z-10" id="video-placeholder">
+                                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <i class="fas fa-film text-2xl text-yellow-400"></i>
+                                    </div>
+                                    <p class="text-sm text-gray-400 mb-1">Click to upload video</p>
+                                    <p class="text-xs text-gray-600">MP4, MOV, M4V, GIF ≤ 500 MB</p>
+                                    <p class="text-xs text-yellow-500 mt-2 font-medium">Max duration: 5 minutes</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Face Upload -->
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <div class="step-number">2</div>
+                                <span class="text-sm font-medium text-gray-300">Upload target face</span>
+                            </div>
+                            <div class="upload-zone rounded-2xl p-8 text-center cursor-pointer relative overflow-hidden group" onclick="document.getElementById('target-video-face').click()" ondrop="handleDrop(event, 'video-target')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                                <input type="file" id="target-video-face" class="hidden" accept="image/*" onchange="handleFileSelect(event, 'video-target')">
+                                <div id="preview-video-target" class="hidden absolute inset-0 bg-cover bg-center"></div>
+                                <div class="relative z-10">
+                                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <i class="fas fa-user-circle text-2xl text-yellow-400"></i>
+                                    </div>
+                                    <p class="text-sm text-gray-400 mb-1">Click to upload face image</p>
+                                    <p class="text-xs text-gray-600">Photo (JPG, PNG, WEBP) ≤ 50 MB</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Section -->
+                    <div id="video-progress" class="hidden bg-black/30 rounded-xl p-4 border border-yellow-500/20">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-medium text-gray-300">Processing video...</span>
+                            <span class="text-sm text-yellow-400" id="progress-text">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
+                            <div id="progress-bar" class="progress-bar h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between items-center mt-2 text-xs text-gray-500">
+                            <span id="queue-info">Queue: 0</span>
+                            <button onclick="cancelTask()" class="text
